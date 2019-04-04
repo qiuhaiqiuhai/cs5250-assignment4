@@ -10,6 +10,7 @@ Output files:
     SJF.txt
 '''
 import sys
+import copy
 
 input_file = 'input.txt'
 
@@ -40,8 +41,48 @@ def FCFS_scheduling(process_list):
 #Input: process_list, time_quantum (Positive Integer)
 #Output_1 : Schedule list contains pairs of (time_stamp, proccess_id) indicating the time switching to that proccess_id
 #Output_2 : Average Waiting Time
-def RR_scheduling(process_list, time_quantum ):
-    return (["to be completed, scheduling process_list on round robin policy with time_quantum"], 0.0)
+def RR_scheduling(process_list_origin, time_quantum):
+    schedule = []
+    current_time = 0
+    waiting_time = 0
+    process_pool = {}
+    process_ids = []
+    process_index = 0
+    process_list = copy.deepcopy(process_list_origin)
+
+    for process in process_list:
+        if process.id in process_pool:
+            process_pool[process.id].append(process)
+        else:
+            process_pool[process.id] = [process]
+            process_ids.append(process.id)
+
+    while len(process_ids)>0:
+        if(len(process_pool[process_ids[process_index]])>0):
+            current_process = process_pool[process_ids[process_index]][0]
+            process_index = process_index+1
+
+            if (current_time < current_process.arrive_time):
+                current_time = current_process.arrive_time
+            schedule.append((current_time, current_process.id))
+            waiting_time = waiting_time + (current_time - current_process.arrive_time)
+
+            if(current_process.burst_time<=time_quantum):
+                current_time = current_time + current_process.burst_time
+                process_pool[current_process.id].pop(0)
+            else:
+                current_time = current_time + time_quantum
+                current_process.burst_time-=time_quantum
+        else:
+            process_ids.pop(process_index)
+
+        if process_index>=len(process_ids):
+            process_index = 0
+
+
+    average_waiting_time = waiting_time / float(len(process_list_origin))
+    return schedule, average_waiting_time
+    # return (["to be completed, scheduling process_list on round robin policy with time_quantum"], 0.0)
 
 def SRTF_scheduling(process_list):
     return (["to be completed, scheduling process_list on SRTF, using process.burst_time to calculate the remaining time of the current process "], 0.0)
