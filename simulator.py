@@ -81,7 +81,7 @@ def RR_scheduling(process_list_origin, time_quantum):
             current_process = current_pool[0]
             process_index = process_index+1
 
-            if(not schedule or current_process.id != schedule[-1][1]):
+            if(not schedule or pre_process != current_process):
                 schedule.append((current_time, current_process.id))
             waiting_time = waiting_time + (current_time - current_process.arrive_time)
 
@@ -92,6 +92,7 @@ def RR_scheduling(process_list_origin, time_quantum):
                 current_time += time_quantum
                 current_process.burst_time-=time_quantum
                 current_process.arrive_time = current_time
+            pre_process = current_process
         else:
             process_ids.pop(process_index)
 
@@ -109,13 +110,13 @@ def SRTF_scheduling(process_list_origin):
 
     while not pqueue.empty() or process_list:
         if pqueue.empty():
-            current_process = process_list.pop(0)
-            pqueue.put(current_process)
-            current_time = current_process.arrive_time
+            new_process = process_list.pop(0)
+            pqueue.put(new_process)
+            current_time = new_process.arrive_time
 
         else:
             current_process = pqueue.get()
-            if (not schedule or current_process.id != schedule[-1][1]):
+            if (not schedule or current_process != pre_process):
                 schedule.append((current_time, current_process.id))
             waiting_time = waiting_time + (current_time - current_process.arrive_time)
 
@@ -133,6 +134,7 @@ def SRTF_scheduling(process_list_origin):
                     current_time += current_process.burst_time
             else:
                 current_time +=current_process.burst_time
+            pre_process = current_process
 
 
     average_waiting_time = waiting_time / float(len(process_list_origin))
@@ -164,10 +166,11 @@ def SJF_scheduling(process_list_origin, alpha=0.5, init_time=5):
             continue
 
         current_process = pqueue.get()
-        if (not schedule or current_process.id != schedule[-1][1]):
+        if (not schedule or current_process != pre_process):
             schedule.append((current_time, current_process.id))
         waiting_time = waiting_time + (current_time - current_process.arrive_time)
         current_time += current_process.burst_time
+        pre_process = current_process
 
     average_waiting_time = waiting_time / float(len(process_list_origin))
     return schedule, average_waiting_time
