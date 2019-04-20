@@ -13,7 +13,6 @@ import sys
 import copy
 import queue
 
-input_file = 'input.txt'
 def SRTF_lt(process_a, process_b):
     return process_a.burst_time < process_b.burst_time or process_a.burst_time == process_b.burst_time and process_a.arrive_time < process_b.arrive_time
 
@@ -101,6 +100,47 @@ def RR_scheduling(process_list_origin, time_quantum):
     return schedule, average_waiting_time
     # return (["to be completed, scheduling process_list on round robin policy with time_quantum"], 0.0)
 
+def RR_scheduling_queue(process_list_origin, time_quantum):
+    schedule = []
+    current_time = 0
+    waiting_time = 0
+    ready_queue = []
+    process_list = copy.deepcopy(process_list_origin)
+
+    while ready_queue or process_list:
+        if not ready_queue:
+            new_process = process_list.pop(0);
+            ready_queue.append(new_process)
+            current_time = new_process.arrive_time
+
+        else:
+            current_process = ready_queue.pop(0)
+
+            if(not schedule or pre_process != current_process):
+                schedule.append((current_time, current_process.id))
+            waiting_time = waiting_time + (current_time - current_process.arrive_time)
+
+            if(current_process.burst_time<=time_quantum):
+                current_time += current_process.burst_time
+                current_process.burst_time = 0
+            else:
+                current_time += time_quantum
+                current_process.burst_time-=time_quantum
+                current_process.arrive_time = current_time
+
+            while (process_list and process_list[0].arrive_time <= current_time):
+                process = process_list.pop(0)
+                ready_queue.append(process)
+
+            if(current_process.burst_time>0):
+                ready_queue.append(current_process)
+
+            pre_process = current_process
+
+    average_waiting_time = waiting_time / float(len(process_list_origin))
+    return schedule, average_waiting_time
+
+
 def SRTF_scheduling(process_list_origin):
     schedule = []
     pqueue = queue.PriorityQueue()
@@ -178,7 +218,7 @@ def SJF_scheduling(process_list_origin, alpha=0.5, init_time=5):
 
 
 
-def read_input():
+def read_input(input_file = 'input.txt'):
     result = []
     with open(input_file) as f:
         for line in f:
@@ -200,18 +240,36 @@ def main(argv):
     print ("printing input ----")
     for process in process_list:
         print (process)
-    print ("simulating FCFS ----")
+
     FCFS_schedule, FCFS_avg_waiting_time =  FCFS_scheduling(process_list)
     write_output('FCFS.txt', FCFS_schedule, FCFS_avg_waiting_time )
-    print ("simulating RR ----")
-    RR_schedule, RR_avg_waiting_time =  RR_scheduling(process_list,time_quantum = 2)
-    write_output('RR.txt', RR_schedule, RR_avg_waiting_time )
-    print ("simulating SRTF ----")
+    print("simulating FCFS ----", FCFS_avg_waiting_time)
+
+
+    RR_avg_waiting_time_list = []
+    for time_quantum in range(1,12):
+        RR_schedule, RR_avg_waiting_time =  RR_scheduling(process_list,time_quantum = time_quantum)
+        RR_avg_waiting_time_list.append((time_quantum,RR_avg_waiting_time))
+    write_output('RR.txt', RR_schedule, RR_avg_waiting_time)
+    print("simulating RR ----", RR_avg_waiting_time_list)
+
+
+    RR_schedule, RR_avg_waiting_time =  RR_scheduling_queue(process_list,time_quantum = 2)
+    write_output('RR_queue.txt', RR_schedule, RR_avg_waiting_time)
+    print("simulating RR queue----")
+
+
     SRTF_schedule, SRTF_avg_waiting_time =  SRTF_scheduling(process_list)
     write_output('SRTF.txt', SRTF_schedule, SRTF_avg_waiting_time )
-    print ("simulating SJF ----")
-    SJF_schedule, SJF_avg_waiting_time =  SJF_scheduling(process_list, alpha = 0.5)
+    print("simulating SRTF ----", SRTF_avg_waiting_time)
+
+    SJF_avg_waiting_time_list = []
+    for alpha in range(0, 21):
+        alpha/=20
+        SJF_schedule, SJF_avg_waiting_time =  SJF_scheduling(process_list, alpha = alpha)
+        SJF_avg_waiting_time_list.append((alpha, SJF_avg_waiting_time))
     write_output('SJF.txt', SJF_schedule, SJF_avg_waiting_time )
+    print("simulating SJF ----", SJF_avg_waiting_time_list)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
