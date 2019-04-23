@@ -48,59 +48,8 @@ def FCFS_scheduling(process_list):
     average_waiting_time = waiting_time/float(len(process_list))
     return schedule, average_waiting_time
 
-#Input: process_list, time_quantum (Positive Integer)
-#Output_1 : Schedule list contains pairs of (time_stamp, proccess_id) indicating the time switching to that proccess_id
-#Output_2 : Average Waiting Time
-def RR_scheduling(process_list_origin, time_quantum):
-    schedule = []
-    current_time = 0
-    waiting_time = 0
-    process_pool = {}
-    process_ids = []
-    process_index = 0
-    process_list = copy.deepcopy(process_list_origin)
 
-    while process_ids or process_list:
-        while process_list and process_list[0].arrive_time<=current_time:
-            process = process_list.pop(0)
-            if process.id in process_pool:
-                process_pool[process.id].append(process)
-            else:
-                process_pool[process.id] = [process]
-            if process.id not in process_ids:
-                process_ids.append(process.id)
-
-        if not process_ids:
-            current_time = process_list[0].arrive_time
-            continue
-        if process_index>=len(process_ids):
-            process_index = 0
-        current_pool = process_pool[process_ids[process_index]]
-        if(len(current_pool)>0):
-            current_process = current_pool[0]
-            process_index = process_index+1
-
-            if(not schedule or pre_process != current_process):
-                schedule.append((current_time, current_process.id))
-            waiting_time = waiting_time + (current_time - current_process.arrive_time)
-
-            if(current_process.burst_time<=time_quantum):
-                current_time += current_process.burst_time
-                process_pool[current_process.id].pop(0)
-            else:
-                current_time += time_quantum
-                current_process.burst_time-=time_quantum
-                current_process.arrive_time = current_time
-            pre_process = current_process
-        else:
-            process_ids.pop(process_index)
-
-
-    average_waiting_time = waiting_time / float(len(process_list_origin))
-    return schedule, average_waiting_time
-    # return (["to be completed, scheduling process_list on round robin policy with time_quantum"], 0.0)
-
-def RR_scheduling_queue(process_list_origin, time_quantum):
+def RR_scheduling(process_list_origin, time_quantum=2):
     schedule = []
     current_time = 0
     waiting_time = 0
@@ -245,30 +194,28 @@ def main(argv):
     write_output('FCFS.txt', FCFS_schedule, FCFS_avg_waiting_time )
     print("simulating FCFS ----", FCFS_avg_waiting_time)
 
+    RR_schedule, RR_avg_waiting_time = RR_scheduling(process_list)
+    write_output('RR.txt', RR_schedule, RR_avg_waiting_time)
 
     RR_avg_waiting_time_list = []
     for time_quantum in range(1,12):
         RR_schedule, RR_avg_waiting_time =  RR_scheduling(process_list,time_quantum = time_quantum)
         RR_avg_waiting_time_list.append((time_quantum,RR_avg_waiting_time))
-    write_output('RR.txt', RR_schedule, RR_avg_waiting_time)
     print("simulating RR ----", RR_avg_waiting_time_list)
 
-
-    RR_schedule, RR_avg_waiting_time =  RR_scheduling_queue(process_list,time_quantum = 2)
-    write_output('RR_queue.txt', RR_schedule, RR_avg_waiting_time)
-    print("simulating RR queue----")
 
 
     SRTF_schedule, SRTF_avg_waiting_time =  SRTF_scheduling(process_list)
     write_output('SRTF.txt', SRTF_schedule, SRTF_avg_waiting_time )
     print("simulating SRTF ----", SRTF_avg_waiting_time)
 
+    SJF_schedule, SJF_avg_waiting_time = SJF_scheduling(process_list)
+    write_output('SJF.txt', SJF_schedule, SJF_avg_waiting_time)
     SJF_avg_waiting_time_list = []
-    for alpha in range(0, 21):
-        alpha/=20
+    for alpha in range(0, 11):
+        alpha/=10
         SJF_schedule, SJF_avg_waiting_time =  SJF_scheduling(process_list, alpha = alpha)
         SJF_avg_waiting_time_list.append((alpha, SJF_avg_waiting_time))
-    write_output('SJF.txt', SJF_schedule, SJF_avg_waiting_time )
     print("simulating SJF ----", SJF_avg_waiting_time_list)
 
 if __name__ == '__main__':
